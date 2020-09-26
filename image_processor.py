@@ -5,7 +5,7 @@ DEFAULT_HEIGHT, DEFAULT_WIDTH = 500, 500
 
 
 def main():
-    image = cv2.imread("./img/sudoku.png")
+    image = cv2.imread("./img/sudoku2.png")
     resizedImage = imutils.resize(
         image, height=DEFAULT_HEIGHT, width=DEFAULT_WIDTH)
     grayImage = cv2.cvtColor(resizedImage, cv2.COLOR_BGR2GRAY)
@@ -13,6 +13,11 @@ def main():
                            threshold2=200)
     verticalLines = getVerticalLines(edgedImage, resizedImage)
     horizontalLines = getHorizontal(edgedImage, resizedImage)
+    fullBoardLines = numpy.concatenate((verticalLines, horizontalLines))
+    negativeLines = negativeImage(fullBoardLines, resizedImage)
+    main = cv2.addWeighted(resizedImage, 0.9, negativeLines, 1, 0)
+    cv2.imshow("out", main)
+    cv2.waitKey(0)
 
 
 def getHorizontal(edgedImage, resizedImage):
@@ -34,6 +39,7 @@ def getHorizontal(edgedImage, resizedImage):
                 linesToKeep.append(line1)
             elif line1[0][1] >= DEFAULT_HEIGHT - PIXEL_TRESHOLD:
                 linesToKeep.append(line1)
+    linesToKeep = numpy.array(linesToKeep)
     # negativeImage(linesToKeep, resizedImage)
     return linesToKeep
 
@@ -66,8 +72,9 @@ def negativeImage(lines, image):
         coords = line[0]
         x1, y1, x2, y2 = line[0]
         cv2.line(negativeImage, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    cv2.imshow("Input", negativeImage)
-    cv2.waitKey(0)
+    # cv2.imshow("Input", negativeImage)
+    # cv2.waitKey(0)
+    return negativeImage
 
 
 main()
