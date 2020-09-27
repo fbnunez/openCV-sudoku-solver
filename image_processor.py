@@ -1,9 +1,7 @@
 import imutils
 import cv2
 import numpy
-from PIL import Image
 import pytesseract
-import argparse
 import os
 DEFAULT_HEIGHT, DEFAULT_WIDTH = 700, 700  # Image size
 BOARD_SIZE = 9  # Square board: 9x9
@@ -22,25 +20,37 @@ def main():
     contours, hierarchy = cv2.findContours(grayImage,
                                            cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(grayImage, contours, -1, (0, 255, 0), 3)
-    # edgedImage = cv2.Canny(grayImage, threshold1=50, threshold2=200)
 
     edgedSquaresImages = []
     for y in range(BOARD_SIZE):
         for x in range(BOARD_SIZE):
+            # finding each square position based in a 9x9 board
             y1 = y * (DEFAULT_HEIGHT//BOARD_SIZE)
             y2 = (y+1) * (DEFAULT_HEIGHT//BOARD_SIZE)
             x1 = x * (DEFAULT_WIDTH//BOARD_SIZE)
             x2 = (x+1) * (DEFAULT_WIDTH//BOARD_SIZE)
+            # cropping based on coordinates
             tempImage = grayImage[y1:y2, x1:x2]
+
+            # Removing all black contours left from cropping the image (edges)
+            # Getting the contour of the image
+            # New coordinates: nX, nY, w, h
+            # Cropping image again based on the new coordinates
             _, thresh = cv2.threshold(tempImage, 1, 255, cv2.THRESH_BINARY)
             contours, hierarchy = cv2.findContours(
                 thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             cnt = contours[0]
-            nX, nY, w, h = cv2.boundingRect(cnt)
-            tempImage = tempImage[nY:nY+h, nX:nX+w]
+            nX, nY, w, h = cv2.boundingRect(cnt)  # new coordinates
+            tempImage = tempImage[nY:nY+h, nX:nX+w]  # cropping
+
+            # Resizing image making it easier for Tesseract
+            # Applying blur as a form of antialiasing
+            # Dilating the image in one iteration to trim black lines
             tempImage = imutils.resize(tempImage, width=110, height=110)
             tempImage = cv2.GaussianBlur(tempImage, (5, 5), 0)
             tempImage = cv2.dilate(tempImage, kernel, iterations=1)
+
+            # Converting image to text using Tesseract
             text = pytesseract.image_to_string(
                 tempImage, lang='eng', config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
             text = str(text).strip().replace(' ', '')
