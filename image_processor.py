@@ -1,7 +1,11 @@
 import imutils
 import cv2
 import numpy
-DEFAULT_HEIGHT, DEFAULT_WIDTH = 500, 500  # Image size
+from PIL import Image
+import pytesseract
+import argparse
+import os
+DEFAULT_HEIGHT, DEFAULT_WIDTH = 700, 700  # Image size
 BOARD_SIZE = 9  # Square board: 9x9
 
 
@@ -10,15 +14,20 @@ def main():
     image = imutils.resize(
         image, height=DEFAULT_HEIGHT, width=DEFAULT_WIDTH)
     grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    kernel = numpy.ones((3, 3), numpy.uint8)
     edgedImage = cv2.Canny(grayImage, threshold1=50,
                            threshold2=200)
 
     # making the countour of the image so edges are more defined
-    contours, hierarchy = cv2.findContours(edgedImage,
-                                           cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(grayImage,
+                                           cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(grayImage, contours, -1, (0, 255, 0), 3)
-    edgedImage = cv2.Canny(grayImage, threshold1=50, threshold2=200)
+    # edgedImage = cv2.Canny(grayImage, threshold1=50, threshold2=200)
 
+    # grayImage = cv2.dilate(grayImage, kernel, iterations=1)
+    # cv2.imshow("out", grayImage)
+    # cv2.waitKey(0)
+    # exit(1)
     edgedSquaresImages = []
     for y in range(BOARD_SIZE):
         for x in range(BOARD_SIZE):
@@ -26,8 +35,31 @@ def main():
             y2 = (y+1) * (DEFAULT_HEIGHT//BOARD_SIZE)
             x1 = x * (DEFAULT_WIDTH//BOARD_SIZE)
             x2 = (x+1) * (DEFAULT_WIDTH//BOARD_SIZE)
-            tempImage = edgedImage[y1:y2, x1:x2]
-            edgedSquaresImages.append(tempImage)
+            tempImage = grayImage[y1:y2, x1:x2]
+            _, thresh = cv2.threshold(tempImage, 1, 255, cv2.THRESH_BINARY)
+            contours, hierarchy = cv2.findContours(
+                thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cnt = contours[0]
+            nX, nY, w, h = cv2.boundingRect(cnt)
+            tempImage = tempImage[nY:nY+h, nX:nX+w]
+            tempImage = cv2.dilate(tempImage, kernel, iterations=1)
+            # filename = f"./out/square_{y}_{x}.png"
+            # cv2.imwrite(filename, tempImage)
+            # _, img_binarized = cv2.threshold(
+            #     tempImage, 100, 255, cv2.THRESH_BINARY)
+            # pil_img = Image.fromarray(img_binarized)
+            text = pytesseract.image_to_string(
+                tempImage, lang='eng', config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
+            text = str(text).strip().replace(' ', '')
+            # print(text)
+            if text != '':
+                print(text)
+                cv2.imshow("out", tempImage)
+                cv2.waitKey(0)
+            # if text != '':
+    # edgedSquaresImages.append(tempImage)
+    # text = pytesseract.image_to_string(Image.open('./out/square_1_5.png'))
+    # # os.remove(filename)
 
 
 main()
