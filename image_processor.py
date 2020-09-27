@@ -10,7 +10,7 @@ BOARD_SIZE = 9  # Square board: 9x9
 
 
 def main():
-    image = cv2.imread("./img/sudoku.png")
+    image = cv2.imread("./img/sudoku2.png")
     image = imutils.resize(
         image, height=DEFAULT_HEIGHT, width=DEFAULT_WIDTH)
     grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -24,10 +24,6 @@ def main():
     cv2.drawContours(grayImage, contours, -1, (0, 255, 0), 3)
     # edgedImage = cv2.Canny(grayImage, threshold1=50, threshold2=200)
 
-    # grayImage = cv2.dilate(grayImage, kernel, iterations=1)
-    # cv2.imshow("out", grayImage)
-    # cv2.waitKey(0)
-    # exit(1)
     edgedSquaresImages = []
     for y in range(BOARD_SIZE):
         for x in range(BOARD_SIZE):
@@ -42,24 +38,17 @@ def main():
             cnt = contours[0]
             nX, nY, w, h = cv2.boundingRect(cnt)
             tempImage = tempImage[nY:nY+h, nX:nX+w]
+            tempImage = imutils.resize(tempImage, width=110, height=110)
+            tempImage = cv2.GaussianBlur(tempImage, (5, 5), 0)
             tempImage = cv2.dilate(tempImage, kernel, iterations=1)
-            # filename = f"./out/square_{y}_{x}.png"
-            # cv2.imwrite(filename, tempImage)
-            # _, img_binarized = cv2.threshold(
-            #     tempImage, 100, 255, cv2.THRESH_BINARY)
-            # pil_img = Image.fromarray(img_binarized)
             text = pytesseract.image_to_string(
                 tempImage, lang='eng', config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
             text = str(text).strip().replace(' ', '')
-            # print(text)
             if text != '':
                 print(text)
-                cv2.imshow("out", tempImage)
+                cv2.imshow("Input", tempImage)
                 cv2.waitKey(0)
-            # if text != '':
-    # edgedSquaresImages.append(tempImage)
-    # text = pytesseract.image_to_string(Image.open('./out/square_1_5.png'))
-    # # os.remove(filename)
+            # edgedSquaresImages.append(tempImage)
 
 
 main()
