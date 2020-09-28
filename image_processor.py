@@ -5,10 +5,12 @@ import pytesseract
 import os
 DEFAULT_HEIGHT, DEFAULT_WIDTH = 700, 700  # Image size
 BOARD_SIZE = 9  # Square board: 9x9
+DEFAULT_PIXEL_OFFSET = 5
 
 
 def main():
-    image = cv2.imread("./img/sudoku2.png")
+    filename = './img/sudoku2.png'
+    image = cv2.imread(filename)
     image = imutils.resize(
         image, height=DEFAULT_HEIGHT, width=DEFAULT_WIDTH)
     grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -21,13 +23,14 @@ def main():
                                            cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(grayImage, contours, -1, (0, 255, 0), 3)
 
-    edgedSquaresImages = []
+    foundNumbers = []
+    emptyRows = []
     for y in range(BOARD_SIZE):
         for x in range(BOARD_SIZE):
             # finding each square position based in a 9x9 board
             y1 = y * (DEFAULT_HEIGHT//BOARD_SIZE)
             y2 = (y+1) * (DEFAULT_HEIGHT//BOARD_SIZE)
-            x1 = x * (DEFAULT_WIDTH//BOARD_SIZE)
+            x1 = x * (DEFAULT_WIDTH//BOARD_SIZE) + DEFAULT_PIXEL_OFFSET
             x2 = (x+1) * (DEFAULT_WIDTH//BOARD_SIZE)
             # cropping based on coordinates
             tempImage = grayImage[y1:y2, x1:x2]
@@ -52,13 +55,38 @@ def main():
 
             # Converting image to text using Tesseract
             text = pytesseract.image_to_string(
-                tempImage, lang='eng', config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
+                tempImage, lang='eng', config='--psm 6 --oem 3 -c tessedit_char_whitelist=0123456789')
             text = str(text).strip().replace(' ', '')
+            # print(text)
+            # cv2.imshow("Input", tempImage)
+            # cv2.waitKey(0)
             if text != '':
-                print(text)
-                cv2.imshow("Input", tempImage)
-                cv2.waitKey(0)
-            # edgedSquaresImages.append(tempImage)
+                foundNumbers.append(text)
+            else:
+                emptyRows.append('0')
+    foundNumbers = numpy.array(foundNumbers)
+    emptyRows = numpy.array(emptyRows)
+
+    testResult(filename, foundNumbers)
+
+
+def testResult(filename: str, numberArray: list):
+    filename = filename.split('.png')[0]
+    filenameNumber = filename[len(filename)-1:]
+    if filenameNumber == '1':
+        testArr = [5, 3, 7, 6, 1, 9, 5, 9, 8, 6, 8, 6, 3, 4,
+                   8, 3, 1, 7, 2, 6, 6, 2, 8, 4, 1, 9, 5, 8, 7, 9]
+    elif filenameNumber == '2':
+        testArr = [3, 8, 5, 1, 2, 5, 7, 4, 1, 9, 5, 7, 3, 2, 1, 4, 9]
+    # print(testArr)
+    for index, number in enumerate(numberArray):
+        try:
+            if (int(number) == testArr[index]):
+                print((True, number, testArr[index]))
+            else:
+                print((False, number, testArr[index]))
+        except:
+            print(False)
 
 
 main()
