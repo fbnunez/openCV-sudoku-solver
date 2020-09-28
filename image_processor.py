@@ -9,7 +9,7 @@ DEFAULT_PIXEL_OFFSET = 5
 
 
 def main():
-    filename = './img/sudoku2.png'
+    filename = './img/sudoku1.png'
     image = cv2.imread(filename)
     image = imutils.resize(
         image, height=DEFAULT_HEIGHT, width=DEFAULT_WIDTH)
@@ -23,8 +23,8 @@ def main():
                                            cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(grayImage, contours, -1, (0, 255, 0), 3)
 
-    foundNumbers = []
-    emptyRows = []
+    boardNumbers = []
+    # emptyRows = []
     for y in range(BOARD_SIZE):
         for x in range(BOARD_SIZE):
             # finding each square position based in a 9x9 board
@@ -61,13 +61,12 @@ def main():
             # cv2.imshow("Input", tempImage)
             # cv2.waitKey(0)
             if text != '':
-                foundNumbers.append(text)
+                boardNumbers.append((text, x1, y1, x2, y2))
             else:
-                emptyRows.append('0')
-    foundNumbers = numpy.array(foundNumbers)
-    emptyRows = numpy.array(emptyRows)
+                boardNumbers.append(('0', x1, y1, x2, y2))
+    boardNumbers = numpy.array(boardNumbers)
 
-    testResult(filename, foundNumbers)
+    testResult(filename, boardNumbers)
 
 
 def testResult(filename: str, numberArray: list):
@@ -79,14 +78,19 @@ def testResult(filename: str, numberArray: list):
     elif filenameNumber == '2':
         testArr = [3, 8, 5, 1, 2, 5, 7, 4, 1, 9, 5, 7, 3, 2, 1, 4, 9]
     # print(testArr)
+    outsideIndex = 0
     for index, number in enumerate(numberArray):
+        if int(number[0]) == 0:
+            continue
         try:
-            if (int(number) == testArr[index]):
-                print((True, number, testArr[index]))
+            if int(number[0]) == testArr[outsideIndex]:
+                print((True, number[0], testArr[outsideIndex]))
             else:
-                print((False, number, testArr[index]))
+                print((False, number[0], testArr[outsideIndex]))
         except:
             print(False)
+        finally:
+            outsideIndex += 1
 
 
 main()
