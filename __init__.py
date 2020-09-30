@@ -1,5 +1,8 @@
 import image_processor
 
+# Sudoku rules code based on https://techwithtim.net/tutorials/python-programming/sudoku-solver-backtracking/
+# The main focus of this was the openCV and imaging processing, not the backtracking algorithm
+
 
 def print_board(board: list):
     for i, row in enumerate(board):
