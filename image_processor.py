@@ -8,8 +8,8 @@ BOARD_SIZE = 9  # Square board: 9x9
 DEFAULT_PIXEL_OFFSET = 5
 
 
-def main():
-    filename = './img/sudoku1.png'
+def main(filename: str = None) -> list:
+    filename = './img/sudoku1.png' if filename is None else filename
     image = cv2.imread(filename)
     image = imutils.resize(
         image, height=DEFAULT_HEIGHT, width=DEFAULT_WIDTH)
@@ -23,9 +23,9 @@ def main():
                                            cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(grayImage, contours, -1, (0, 255, 0), 3)
 
-    boardNumbers = []
-    # emptyRows = []
+    board = []
     for y in range(BOARD_SIZE):
+        boardNumbers = []
         for x in range(BOARD_SIZE):
             # finding each square position based in a 9x9 board
             y1 = y * (DEFAULT_HEIGHT//BOARD_SIZE)
@@ -61,15 +61,16 @@ def main():
             # cv2.imshow("Input", tempImage)
             # cv2.waitKey(0)
             if text != '':
-                boardNumbers.append((text, x1, y1, x2, y2))
+                boardNumbers.append(int(text))
             else:
-                boardNumbers.append(('0', x1, y1, x2, y2))
-    boardNumbers = numpy.array(boardNumbers)
+                boardNumbers.append(0)
+        board.append(boardNumbers)
+    board = numpy.array(board)
+    return board
+    # testResult(filename, board)
 
-    testResult(filename, boardNumbers)
 
-
-def testResult(filename: str, numberArray: list):
+def testResult(filename: str, board: list):
     filename = filename.split('.png')[0]
     filenameNumber = filename[len(filename)-1:]
     if filenameNumber == '1':
@@ -79,18 +80,19 @@ def testResult(filename: str, numberArray: list):
         testArr = [3, 8, 5, 1, 2, 5, 7, 4, 1, 9, 5, 7, 3, 2, 1, 4, 9]
     # print(testArr)
     outsideIndex = 0
-    for index, number in enumerate(numberArray):
-        if int(number[0]) == 0:
-            continue
-        try:
-            if int(number[0]) == testArr[outsideIndex]:
-                print((True, number[0], testArr[outsideIndex]))
-            else:
-                print((False, number[0], testArr[outsideIndex]))
-        except:
-            print(False)
-        finally:
-            outsideIndex += 1
+    for rowIndex, row in enumerate(board):
+        for index, number in enumerate(row):
+            if int(number) == 0:
+                continue
+            try:
+                if int(number) == testArr[outsideIndex]:
+                    print((True, number, testArr[outsideIndex]))
+                else:
+                    print((False, number, testArr[outsideIndex]))
+            except:
+                print(False)
+            finally:
+                outsideIndex += 1
 
 
 main()
